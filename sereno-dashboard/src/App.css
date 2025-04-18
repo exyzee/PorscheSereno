@@ -1,0 +1,14 @@
+.app {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.mapboxgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.mapboxgl-control-container {
+  display: none;
+}
