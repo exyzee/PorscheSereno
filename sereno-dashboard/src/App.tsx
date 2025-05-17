@@ -1,18 +1,38 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import HomeContent from './pages/HomeContent';
+import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
-import MapView from './pages/MapView';
-import IntroLogo from './components/IntroLogo';
+import MapContent from './pages/MapContent';
+import DashboardLayout from './layout/DashboardLayout';
 import './App.css';
 
 function App() {
-  const [showIntro, setShowIntro] = useState(true);
-
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/map" element={<MapView />} />
-    </Routes>
+    <div className="App">
+      <Routes>
+        <Route path="/" element={
+          <DashboardLayout>
+            <HomeContent />
+          </DashboardLayout>
+        } />
+        <Route path="/map" element={
+          <DashboardLayout>
+            <MapContent />
+          </DashboardLayout>
+        } />
+        <Route path="/settings" element={
+          <DashboardLayout>
+            <Settings />
+          </DashboardLayout>
+        } />
+        <Route path="/dashboard" element={
+          <DashboardLayout>
+            <Dashboard />
+          </DashboardLayout>
+        } />
+      </Routes>
+    </div>
   );
 }
 

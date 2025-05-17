@@ -1,4 +1,3 @@
-
 import React from 'react';
 import HomeIcon from '@mui/icons-material/Home';
 import appleMapsPng from '../assets/icons/apple-maps.png';
@@ -7,6 +6,7 @@ import appleMusicPng from '../assets/icons/apple-music.png';
 import appleMailPng from '../assets/icons/apple-mail.png';
 import dashboardPng from '../assets/icons/dashboard.png';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 
 const iconStyle: React.CSSProperties = {
   width: 44,
@@ -36,77 +36,101 @@ function useTouchActive() {
   };
 }
 
-const LiveClock = ({ showTime = true, showDate = true }: { showTime?: boolean; showDate?: boolean }) => {
+const LiveClock = () => {
   const [now, setNow] = React.useState(new Date());
   React.useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
   const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const date = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-      {showTime && (
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: 18, textShadow: '0 2px 12px rgba(0,0,0,0.13)' }}>{time}</span>
-      )}
-      {showDate && (
-        <span style={{ color: '#fff', fontWeight: 400, fontSize: 13, opacity: 0.75, textShadow: '0 2px 12px rgba(0,0,0,0.10)' }}>{date}</span>
-      )}
-    </div>
+    <span style={{ 
+      color: '#fff', 
+      fontWeight: 700, 
+      fontSize: 18, 
+      textShadow: '0 2px 12px rgba(0,0,0,0.13)',
+      textAlign: 'center',
+      display: 'block'
+    }}>
+      {time}
+    </span>
   );
 };
 
 function SidebarIcons() {
   const navigate = useNavigate();
   const homeTouch = useTouchActive();
+  const mapsTouch = useTouchActive();
   return (
-    <>
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 10, marginBottom: 6 }}>
-        <LiveClock showTime={true} showDate={false} />
-      </div>
-      <div
-        style={{
-          borderRadius: 14,
-          padding: 8,
-          background: homeTouch.active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.10)',
-          transition: 'background 0.2s',
-          margin: '4px 0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-        }}
-        onTouchStart={homeTouch.onTouchStart}
-        onTouchEnd={homeTouch.onTouchEnd}
-        onMouseDown={homeTouch.onMouseDown}
-        onMouseUp={homeTouch.onMouseUp}
-        onMouseLeave={homeTouch.onMouseLeave}
-        onClick={() => navigate('/')}
-      >
-        <HomeIcon style={{ fontSize: 36, color: '#fff' }} />
-      </div>
-      <img
-        src={appleMapsPng}
-        alt="Apple Maps"
-        style={iconStyle}
-        onClick={() => navigate('/map')}
-      />
-      {[serenoLogoPng, appleMusicPng, appleMailPng, dashboardPng].map((src) => {
-        const iconTouch = useTouchActive();
-        return (
-          <img
-            key={src}
-            src={src}
-            alt="Sidebar icon"
-            style={{
-              ...iconStyle,
-              ...(iconTouch.active ? iconActiveStyle : {}),
-            }}
-            {...iconTouch}
-          />
-        );
-      })}
-    </>
+    <Box sx={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 2,
+      height: '100%',
+      p: 2,
+      bgcolor: 'transparent'
+    }}>
+      {/* Clock */}
+      <Box sx={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 0.75,
+        mt: 1.75,
+        mb: -2
+      }}>
+        <LiveClock />
+        <Box sx={{
+          width: 20,
+          height: 2,
+          borderRadius: 1,
+          bgcolor: 'rgba(255,255,255,0.2)'
+        }} />
+      </Box>
+
+      {/* Icons */}
+      <Box sx={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 1
+      }}>
+        <HomeIcon 
+          sx={{
+            ...iconStyle,
+            ...(homeTouch.active ? iconActiveStyle : {})
+          }}
+          onClick={() => navigate('/')}
+          {...homeTouch}
+        />
+        <img
+          src={appleMapsPng}
+          alt="Apple Maps"
+          style={{
+            ...iconStyle,
+            ...(mapsTouch.active ? iconActiveStyle : {})
+          }}
+          onClick={() => navigate('/map')}
+          {...mapsTouch}
+        />
+        {[serenoLogoPng, appleMusicPng, appleMailPng, dashboardPng].map((src) => {
+          const iconTouch = useTouchActive();
+          return (
+            <img
+              key={src}
+              src={src}
+              alt="Sidebar icon"
+              style={{
+                ...iconStyle,
+                ...(iconTouch.active ? iconActiveStyle : {}),
+              }}
+              {...iconTouch}
+            />
+          );
+        })}
+      </Box>
+    </Box>
   );
 }
 

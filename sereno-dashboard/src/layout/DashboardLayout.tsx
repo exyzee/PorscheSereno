@@ -28,7 +28,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => (
       fontFamily: 'SF Pro, San Francisco, Segoe UI, Roboto, Arial, sans-serif',
     }}
   >
-    {/* Sidebar inside the main container */}
+    {/* Sidebar */}
     <Box
       sx={{
         width: 96,
@@ -62,8 +62,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => (
         <SidebarIcons />
       </Box>
     </Box>
-    {/* Main content area */}
-    <Box sx={{ flex: 1, height: '100%', p: 2, overflow: 'hidden' }}>
+
+    {/* Main content */}
+    <Box sx={{ flex: 1, height: '100%', p: 2, position: 'relative', overflow: 'hidden' }}>
       {children}
     </Box>
   </Box>

@@ -1,103 +1,57 @@
-import { styled } from '@mui/material/styles'
-import { Box, IconButton, Tooltip } from '@mui/material'
-import HomeIcon from '@mui/icons-material/Home'
-import MapIcon from '@mui/icons-material/Map'
-import SettingsIcon from '@mui/icons-material/Settings'
-import { useLocation, useNavigate } from 'react-router-dom'
-
-const SidebarRoot = styled(Box)({
-  width: 96,
-  minWidth: 96,
-  height: '100vh',
-  background: '#181D2F',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  paddingTop: 24,
-  gap: 32,
-  boxShadow: '2px 0 8px 0 rgba(0,0,0,0.04)',
-})
-
-const Logo = styled('div')({
-  width: 48,
-  height: 48,
-  borderRadius: 12,
-  background: '#FFFFFF',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontWeight: 800,
-  fontSize: 24,
-  color: '#181D2F',
-  marginBottom: 8,
-  marginTop: 0,
-  letterSpacing: 1,
-})
-
-const NavList = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 24,
-  alignItems: 'center',
-  width: '100%',
-})
-
-const IconBg = styled('div')<{active?: boolean}>(({ active }) => ({
-  width: 48,
-  height: 48,
-  borderRadius: 12,
-  background: active ? '#F7F8FA' : 'transparent',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: 0,
-  position: 'relative',
-  boxShadow: active ? '0 2px 8px 0 rgba(24,29,47,0.08)' : 'none',
-}))
-
-const ActiveBar = styled('div')({
-  position: 'absolute',
-  left: 0,
-  top: 8,
-  width: 4,
-  height: 32,
-  borderRadius: 2,
-  background: '#646CFF',
-})
+import React from 'react';
+import { Box, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import MailIcon from '@mui/icons-material/Mail';
+import MapIcon from '@mui/icons-material/Map';
 
 const menuItems = [
-  { text: 'Dashboard', icon: <HomeIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/' },
-  { text: 'Map View', icon: <MapIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/map' },
-  { text: 'Settings', icon: <SettingsIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/settings' }
-]
+  { text: 'Dashboard', icon: <DashboardIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/' },
+  { text: 'Music', icon: <MusicNoteIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/music' },
+  { text: 'Mail', icon: <MailIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/mail' },
+  { text: 'Maps', icon: <MapIcon sx={{ fontSize: 28, color: '#181D2F' }} />, path: '/maps' },
+];
 
 const Sidebar = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
-    <SidebarRoot>
-      <Logo>S</Logo>
-      <NavList>
-        {menuItems.map((item) => {
-          const active = location.pathname === item.path
-          return (
-            <Tooltip title={item.text} placement="right" key={item.text} arrow>
-              <IconBg active={active}>
-                {active && <ActiveBar />}
-                <IconButton
-                  onClick={() => navigate(item.path)}
-                  sx={{ width: 48, height: 48 }}
-                >
-                  {item.icon}
-                </IconButton>
-              </IconBg>
-            </Tooltip>
-          )
-        })}
-      </NavList>
-    </SidebarRoot>
-  )
-}
+    <Box sx={{ 
+      width: 240,
+      bgcolor: '#fff',
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <Box sx={{ p: 2, borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: '#181D2F' }}>
+          Sereno
+        </Typography>
+      </Box>
+      <List sx={{ flex: 1 }}>
+        {menuItems.map((item) => (
+          <ListItem
+            button
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            sx={{
+              bgcolor: location.pathname === item.path ? 'rgba(0,0,0,0.05)' : 'transparent',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' },
+            }}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+};
 
-export default Sidebar
+export default Sidebar;

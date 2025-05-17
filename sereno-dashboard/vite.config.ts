@@ -7,5 +7,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
+  },
+  resolve: {
+    alias: {
+      'react-map-gl': 'react-map-gl/dist/esm'
+    }
   }
 });
