@@ -15,7 +15,9 @@
   "installCommand": "npm install",
   "functions": {
     "api/**/*.php": {
-      "runtime": "vercel-php@0.6.0"
+      "runtime": "vercel-php@0.6.0",
+      "memory": 1024,
+      "maxDuration": 10
     }
   }
 } 
