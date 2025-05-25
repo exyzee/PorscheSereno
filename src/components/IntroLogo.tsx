@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import introLogoMp4 from '../assets/intro-logo.mp4';
 
 interface IntroLogoProps {
@@ -7,8 +7,6 @@ interface IntroLogoProps {
 
 const IntroLogo: React.FC<IntroLogoProps> = ({ onFinish }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [error, setError] = React.useState(false);
-  const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
     let fallbackTimer: NodeJS.Timeout | undefined;
@@ -56,10 +54,9 @@ const IntroLogo: React.FC<IntroLogoProps> = ({ onFinish }) => {
           display: 'block',
         }}
         onEnded={onFinish}
-        onError={() => setError(true)}
       />
       {/* Unmute button overlay */}
-      {videoRef.current && videoRef.current.muted && !error && (
+      {videoRef.current && videoRef.current.muted && (
         <button
           onClick={() => {
             if (videoRef.current) {
@@ -86,12 +83,6 @@ const IntroLogo: React.FC<IntroLogoProps> = ({ onFinish }) => {
         >
           Unmute
         </button>
-      )}
-      {error && (
-        <div style={{ position: 'absolute', color: 'red', background: '#fff', padding: 16, borderRadius: 8, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 2 }}>
-          Failed to load intro video.<br />
-          <button onClick={onFinish} style={{ marginTop: 8, padding: '6px 20px', borderRadius: 4, border: 'none', background: '#E53935', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Dismiss</button>
-        </div>
       )}
     </div>
   );

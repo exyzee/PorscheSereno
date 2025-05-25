@@ -1,4 +1,3 @@
-import React from 'react';
 import DashboardLayout from '../layout/DashboardLayout';
 import HomeContent from './HomeContent';
 

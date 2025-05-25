@@ -1,28 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+  plugins: [react(), svgr()],
+  base: '/Sereno---Dashboard-1/',
+  server: {
+    port: 3000,
+    host: true
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          mapbox: ['mapbox-gl'],
-        },
-      },
-    },
+    assetsDir: 'assets',
+    sourcemap: true
   },
-  server: {
-    port: 3000,
-    host: true,
-  },
+  resolve: {
+    alias: {
+      'react-map-gl': 'react-map-gl/dist/esm'
+    }
+  }
 });

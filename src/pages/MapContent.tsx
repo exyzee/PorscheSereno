@@ -1,38 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Paper, TextField, Button, Typography, IconButton, Collapse, Fade, Chip, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Paper, TextField, Button, Typography, IconButton, Collapse, Fade, Chip, Tooltip } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import mapboxgl, { MapboxOptions } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import DirectionsIcon from '@mui/icons-material/Directions';
 import CloseIcon from '@mui/icons-material/Close';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import MyLocationIcon from '@mui/icons-material/MyLocation';
 import TrafficIcon from '@mui/icons-material/Traffic';
 import SpeedIcon from '@mui/icons-material/Speed';
 import InfoIcon from '@mui/icons-material/Info';
-import RouteIcon from '@mui/icons-material/Route';
-import EditIcon from '@mui/icons-material/Edit';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
-import ThermostatIcon from '@mui/icons-material/Thermostat';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import EvStationIcon from '@mui/icons-material/EvStation';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import LocalParkingIcon from '@mui/icons-material/LocalParking';
-import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import HotelIcon from '@mui/icons-material/Hotel';
-import LayersIcon from '@mui/icons-material/Layers';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import CompassCalibrationIcon from '@mui/icons-material/CompassCalibration';
-import TerrainIcon from '@mui/icons-material/Terrain';
-import SatelliteIcon from '@mui/icons-material/Satellite';
-import NightlightIcon from '@mui/icons-material/Nightlight';
 import WbCloudyIcon from '@mui/icons-material/WbCloudy';
-import AirIcon from '@mui/icons-material/Air';
-import carNavIcon from '../assets/car-nav.png';
 import { keyframes } from '@mui/material/styles';
 import RainIcon from '@mui/icons-material/Grain';
 import ThunderstormIcon from '@mui/icons-material/Thunderstorm';
@@ -43,9 +22,6 @@ import DrivingSimulator from '../components/DrivingSimulator';
 import NavigationButton from '../components/NavigationButton';
 import RouteSummary from '../components/RouteSummary';
 import ElectricStationsToggle from '../components/ElectricStationsToggle';
-import ChargingStationPopup from '../components/ChargingStationPopup';
-import { createRoot } from 'react-dom/client';
-import NavigationIcon from '@mui/icons-material/Navigation';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiamhhYWEiLCJhIjoiY205bWw1dTN2MGV5ZDJscjd6M2w2ZWplcCJ9.iPq01-kBwTudMOv3IV9h9g';
 const BRUSSELS_COORDS: [number, number] = [4.3517, 50.8503];
@@ -621,8 +597,8 @@ export const MapContent = () => {
       // Add navigation function to window
       (window as any).navigateToStation = () => {
         if (map.current) {
-          const start = currentRouteCoords[0] || THOMAS_MORE_COORDS;
-          const end = station.coordinates;
+          const start = Array.isArray(currentRouteCoords[0]) && currentRouteCoords[0].length === 2 ? [currentRouteCoords[0][0], currentRouteCoords[0][1]] as [number, number] : THOMAS_MORE_COORDS;
+          const end = Array.isArray(station.coordinates) && station.coordinates.length === 2 ? [station.coordinates[0], station.coordinates[1]] as [number, number] : THOMAS_MORE_COORDS;
           fetchDirections(start, end).then(data => {
             if (data && data.routes && data.routes[0]) {
               const route = data.routes[0];
@@ -672,7 +648,7 @@ export const MapContent = () => {
 
       // Prevent event propagation
       e.preventDefault();
-      e.stopPropagation();
+      (e as unknown as Event).stopPropagation?.();
     };
 
     // Add hover effects

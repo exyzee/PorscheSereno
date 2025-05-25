@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Button } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Box, Typography, Paper } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import widgetBg from '../assets/widget-bg.mp4';
@@ -16,17 +16,14 @@ const MusicWidget = () => {
     playlistUrl: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchTrack = async () => {
     try {
       setIsLoading(true);
-      setError(null);
       const newTrack = await getRandomTrack();
       setTrack(newTrack);
     } catch (error) {
       console.error('Error fetching track:', error);
-      setError('Could not load track');
       setTrack(null);
     } finally {
       setIsLoading(false);
@@ -211,7 +208,7 @@ const MusicWidget = () => {
             transition: 'opacity 0.3s ease'
           }}
         >
-          {error ? 'Could not load track' : (track?.name || 'Loading...')}
+          {track?.name || 'Loading...'}
         </Typography>
         <Typography
           sx={{
@@ -222,7 +219,7 @@ const MusicWidget = () => {
             transition: 'opacity 0.3s ease'
           }}
         >
-          {error ? 'Try refreshing' : (track?.artist || 'Loading...')}
+          {track?.artist || 'Loading...'}
         </Typography>
       </Box>
     </Paper>
@@ -380,9 +377,8 @@ const WeatherWidget = () => {
                 setWeather(null);
               }
             })
-            .catch(() => setWeather(null));
         },
-        (error) => {
+        () => {
           // If denied or error, fallback to Paris
           fetch('https://api.openweathermap.org/data/2.5/weather?q=Paris&appid=0f5c13cbb8dacd08f0cd71bc89836fb5&units=metric')
             .then(res => res.json())
@@ -398,7 +394,6 @@ const WeatherWidget = () => {
                 setWeather(null);
               }
             })
-            .catch(() => setWeather(null));
         }
       );
     } else {
@@ -417,7 +412,6 @@ const WeatherWidget = () => {
             setWeather(null);
           }
         })
-        .catch(() => setWeather(null));
     }
   }, []);
   return (

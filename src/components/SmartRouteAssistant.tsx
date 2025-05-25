@@ -5,7 +5,7 @@ interface SmartRouteAssistantProps {
   route?: number[][] | null;
 }
 
-const SmartRouteAssistant: React.FC<SmartRouteAssistantProps> = ({ route }) => {
+const SmartRouteAssistant: React.FC<SmartRouteAssistantProps> = () => {
   return (
     <Box
       sx={{

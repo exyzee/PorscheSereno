@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
