@@ -4,6 +4,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import widgetBg from '../assets/widget-bg.mp4';
 import { getRandomTrack } from '../utils/spotifyAuth';
+import CallingNotification from '../components/CallingNotification';
 
 // Placeholder widgets (replace with real ones as needed)
 const MusicWidget = () => {
@@ -514,6 +515,8 @@ const HomeContent = () => {
           {/* Right: Weather */}
           <WeatherWidget />
         </Box>
+        {/* Calling Notification - always on top, bottom left */}
+        <CallingNotification />
       </Paper>
 
       {/* Right Column: Music, Stocks, Calendar */}
