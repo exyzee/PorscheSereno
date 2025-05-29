@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/docs/banner.jpg" alt="Sereno Dashboard Banner" width="100%" />
+  <img src="docs/banner.jpg" alt="Sereno Dashboard Banner" width="100%" />
 </p>
 
 <h1 align="center">Sereno Dashboard</h1>
@@ -37,9 +37,9 @@ Sereno Dashboard is a next-generation driving simulation and navigation dashboar
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="/docs/ss1.png" alt="Sereno Dashboard Screenshot" width="80%" />
+  <img src="docs/ss1.png" alt="Sereno Dashboard Screenshot" width="80%" />
   <br/>
-  <img src="/docs/ss2.png" alt="Breathing Widget Screenshot" width="80%" />
+  <img src="docs/ss2.png" alt="Breathing Widget Screenshot" width="80%" />
 </p>
 
 ---
@@ -47,7 +47,7 @@ Sereno Dashboard is a next-generation driving simulation and navigation dashboar
 ## 🚀 Getting Started
 
 > **For class/demo use:**
-> This project is ready to run as-is! All required tokens are included for demonstration purposes. Just clone, install, and start.
+> This project is ready to run as-is! The `.env` file is already set up for you. Just clone, install, and start—no extra setup needed.
 
 ### Prerequisites
 
@@ -80,20 +80,10 @@ Sereno Dashboard is a next-generation driving simulation and navigation dashboar
 
 ## ⚙️ Environment Variables
 
-A working `.env` file is already included for class/demo use. Here are the values:
-
-```env
-VITE_MAPBOX_TOKEN=pk.eyJ1Ijoic3VuZGFyYW1qIiwiYSI6ImNsd2F5d2F5d2F5d2F5In0.eyJ1Ijoic3VuZGFyYW1qIiwiYSI6ImNsd2F5d2F5d2F5d2F5In0
-VITE_API_URL=http://localhost:8000
-VITE_ENABLE_ANALYTICS=true
-VITE_GA_MEASUREMENT_ID=G-T1WKSPHLCR
-VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id_here
-VITE_SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
-```
-
-- **Mapbox:** Token included for demo/class use.
-- **Google Analytics:** Demo measurement ID included.
-- **Spotify:** You can use your own credentials if you want music integration.
+> For class/demo:
+> The `.env` file is already set up for you. You don't need to change anything—just clone and run!
+>
+> For your own deployment or production use, you should use your own Mapbox, Spotify, and Analytics tokens. See `.env.example` for the required variable names.
 
 ---
 
