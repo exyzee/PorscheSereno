@@ -1,6 +1,5 @@
-<p align="center">
-  <img src="docs/banner.jpg" alt="Sereno Dashboard Banner" width="100%" />
-</p>
+![banner](https://github.com/user-attachments/assets/5822a8a7-b3b8-43a3-8d7a-c6484d960067)
+
 
 <h1 align="center">Sereno Dashboard</h1>
 <p align="center"><b>IXD 2 Project, by Jha</b></p>
@@ -36,11 +35,9 @@ Sereno Dashboard is a next-generation driving simulation and navigation dashboar
 
 ## 🖼️ Screenshots
 
-<p align="center">
-  <img src="docs/ss1.png" alt="Sereno Dashboard Screenshot" width="80%" />
-  <br/>
-  <img src="docs/ss2.png" alt="Breathing Widget Screenshot" width="80%" />
-</p>
+![ss1](https://github.com/user-attachments/assets/35582f4c-d7a1-49bb-9c7d-bd223a9c9edd)
+![ss2](https://github.com/user-attachments/assets/183ed775-5450-4547-8c6c-2ba952d967f5)
+
 
 ---
 
