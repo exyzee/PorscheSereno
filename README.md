@@ -33,6 +33,15 @@ Sereno Dashboard is a next-generation driving simulation and navigation dashboar
 
 ---
 
+
+## 🎬 Walkthrough Video
+
+[![Sereno Dashboard Walkthrough]](https://youtu.be/2hE6alU5OPY)
+
+> Click the image above or [watch the full demo on YouTube](https://youtu.be/2hE6alU5OPY).
+
+---
+
 ## 🖼️ Screenshots
 
 ![ss1](https://github.com/user-attachments/assets/35582f4c-d7a1-49bb-9c7d-bd223a9c9edd)
