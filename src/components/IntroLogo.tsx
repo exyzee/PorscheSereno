@@ -69,7 +69,7 @@ const IntroLogo: React.FC<IntroLogoProps> = ({ onFinish }) => {
             bottom: 32,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#222',
+            background: 'rgba(255,255,255,0.1)',
             color: '#fff',
             border: 'none',
             borderRadius: 6,
@@ -78,7 +78,9 @@ const IntroLogo: React.FC<IntroLogoProps> = ({ onFinish }) => {
             fontWeight: 700,
             cursor: 'pointer',
             zIndex: 10,
-            opacity: 0.85,
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            transition: 'all 0.2s ease',
           }}
         >
           Unmute

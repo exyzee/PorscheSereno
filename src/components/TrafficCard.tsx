@@ -6,12 +6,38 @@ const TrafficCard = () => {
   const [toLocation, setToLocation] = useState('');
   const [showVideo, setShowVideo] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleCheckTraffic = () => {
-    // Simulate traffic check
-    const duration = 12; // Hardcoded duration
-    if (duration > 10) {
-      setShowVideo(true);
+  const handleCheckTraffic = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      setShowVideo(false); // Reset video state
+      
+      // First get video info
+      const response = await fetch('http://localhost:8000/api/fetch_video.php?type=rain&info=1');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('PHP Response:', data); // Debug log
+      
+      if (data.success) {
+        // Use the video URL directly from PHP
+        setVideoUrl(`http://localhost:8000${data.videoUrl}`);
+        setShowVideo(true);
+      } else {
+        setError(data.error || 'Failed to load traffic video');
+        console.error('Failed to fetch video:', data.error);
+      }
+    } catch (error) {
+      setError('Could not connect to traffic server');
+      console.error('Error fetching video:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,10 +90,19 @@ const TrafficCard = () => {
         </div>
         <button
           onClick={handleCheckTraffic}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+          disabled={isLoading}
+          className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          Check Traffic
+          {isLoading ? 'Loading...' : 'Check Traffic'}
         </button>
+
+        {error && (
+          <div className="text-red-500 text-sm mt-2">
+            {error}
+          </div>
+        )}
 
         <AnimatePresence>
           {showVideo && (
@@ -78,11 +113,16 @@ const TrafficCard = () => {
               className="mt-4"
             >
               <video
-                src="/api/fetch_video.php?type=rain"
+                src={videoUrl}
                 autoPlay
                 loop
                 muted
                 className="w-[200px] h-[120px] rounded-md"
+                onError={(e) => {
+                  console.error('Video error:', e);
+                  setError('Failed to load video');
+                  setShowVideo(false);
+                }}
               />
             </motion.div>
           )}

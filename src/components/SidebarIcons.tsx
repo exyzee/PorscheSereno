@@ -1,5 +1,6 @@
 import React from 'react';
 import HomeIcon from '@mui/icons-material/Home';
+import PersonIcon from '@mui/icons-material/Person';
 import appleMapsPng from '../assets/icons/apple-maps.png';
 import serenoLogoPng from '../assets/icons/sereno-logo.png';
 import appleMusicPng from '../assets/icons/apple-music.png';
@@ -61,6 +62,7 @@ function SidebarIcons() {
   const navigate = useNavigate();
   const homeTouch = useTouchActive();
   const mapsTouch = useTouchActive();
+  const profileTouch = useTouchActive();
   return (
     <Box sx={{ 
       display: 'flex',
@@ -114,7 +116,7 @@ function SidebarIcons() {
           onClick={() => navigate('/map')}
           {...mapsTouch}
         />
-        {[serenoLogoPng, appleMusicPng, appleMailPng, dashboardPng].map((src) => {
+        {[serenoLogoPng, appleMusicPng, appleMailPng].map((src) => {
           const iconTouch = useTouchActive();
           return (
             <img
@@ -129,6 +131,15 @@ function SidebarIcons() {
             />
           );
         })}
+        <PersonIcon
+          sx={{
+            ...iconStyle,
+            color: '#fff',
+            ...(profileTouch.active ? iconActiveStyle : {})
+          }}
+          onClick={() => navigate('/profile')}
+          {...profileTouch}
+        />
       </Box>
     </Box>
   );

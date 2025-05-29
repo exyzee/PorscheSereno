@@ -1,7 +1,6 @@
-import { Box, Typography, Button, Chip, IconButton } from '@mui/material';
+import { Box, Typography, Button, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import CloseIcon from '@mui/icons-material/Close';
 import EvStationIcon from '@mui/icons-material/EvStation';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -31,7 +30,7 @@ const pulse = keyframes`
   }
 `;
 
-const PopupContainer = styled(Box)(({ theme }) => ({
+const PopupContainer = styled(Box)({
   padding: '16px',
   minWidth: '280px',
   background: 'linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(68, 34, 34, 0.95))',
@@ -41,7 +40,7 @@ const PopupContainer = styled(Box)(({ theme }) => ({
   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
   animation: `${fadeIn} 0.3s ease-out`,
   color: '#fff',
-}));
+});
 
 const StationHeader = styled(Box)({
   display: 'flex',

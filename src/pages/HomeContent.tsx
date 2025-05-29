@@ -11,9 +11,8 @@ const MusicWidget = () => {
   const [track, setTrack] = useState<{
     name: string;
     artist: string;
-    albumArt: string;
-    spotifyUrl: string;
-    playlistUrl: string;
+    image: string;
+    url: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,8 +34,8 @@ const MusicWidget = () => {
   }, []);
 
   const handlePlay = () => {
-    if (track?.playlistUrl) {
-      window.open(track.playlistUrl, '_blank');
+    if (track?.url) {
+      window.open(track.url, '_blank');
     }
   };
 
@@ -93,9 +92,9 @@ const MusicWidget = () => {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          {track?.albumArt ? (
+          {track?.image ? (
             <img
-              src={track.albumArt}
+              src={track.image}
               alt={track.name}
               style={{
                 width: '100%',

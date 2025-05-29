@@ -1,5 +1,3 @@
-import SpotifyWebApi from 'spotify-web-api-node';
-
 interface SpotifyCredentials {
   access_token: string;
   expires_in: number;
@@ -53,65 +51,75 @@ const getAccessToken = async (): Promise<string> => {
 };
 
 export const getRandomTrack = async () => {
-  try {
-    const token = await getAccessToken();
-    const playlistId = '2dvgRSyecZ2qTSnUzVpSjR';
-    const playlistUrl = 'https://open.spotify.com/playlist/2dvgRSyecZ2qTSnUzVpSjR?si=93208cab553a405a';
+  const maxRetries = 3;
+  let retryCount = 0;
 
-    const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+  while (retryCount < maxRetries) {
+    try {
+      const token = await getAccessToken();
+      // Using the custom "songs which make an excellent spaghetti timer" playlist
+      const response = await fetch('https://api.spotify.com/v1/playlists/37lRcA7HqlhM4ASWwudIRN/tracks?limit=50&fields=items(track(name,artists,album,external_urls))&market=US', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error(`Spotify API error: ${response.status} - ${response.statusText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      const data = await response.json();
+      
+      if (!data.items || !Array.isArray(data.items)) {
+        console.error('Invalid response format:', data);
+        throw new Error('Invalid response format from Spotify API');
+      }
 
-    const data = await response.json();
-    
-    if (!data.tracks || !data.tracks.items) {
-      console.error('No tracks found in response:', data);
-      return getFallbackTrack();
-    }
+      // Filter out any null tracks and get valid tracks
+      const validTracks = data.items
+        .filter((item: any) => item.track !== null && item.track.name && item.track.artists && item.track.album?.images?.[0]?.url)
+        .map((item: any) => item.track as SpotifyTrack);
 
-    const tracks = data.tracks.items.filter((item: { track: SpotifyTrack }) => 
-      item.track && 
-      item.track.name && 
-      item.track.artists && 
-      item.track.artists.length > 0 && 
-      item.track.album && 
-      item.track.album.images && 
-      item.track.album.images.length > 0
-    );
-    
-    if (tracks.length === 0) {
-      return getFallbackTrack();
-    }
+      if (validTracks.length === 0) {
+        console.error('No valid tracks found in playlist');
+        throw new Error('No valid tracks found in playlist');
+      }
 
-    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)].track;
-    
-    if (!randomTrack || !randomTrack.name || !randomTrack.artists[0] || !randomTrack.album.images[0] || !randomTrack.external_urls.spotify) {
-      return getFallbackTrack();
+      // Get a random track from the valid tracks
+      const randomTrack = validTracks[Math.floor(Math.random() * validTracks.length)];
+      
+      return {
+        name: randomTrack.name,
+        artist: randomTrack.artists[0].name,
+        image: randomTrack.album.images[0].url,
+        url: randomTrack.external_urls.spotify
+      };
+    } catch (error) {
+      console.error(`Attempt ${retryCount + 1} failed:`, error);
+      retryCount++;
+      
+      if (retryCount === maxRetries) {
+        console.error('All retry attempts failed');
+        // Return a default track object if all retries fail
+        return {
+          name: 'Unable to load track',
+          artist: 'Please try again',
+          image: 'https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e',
+          url: 'https://open.spotify.com'
+        };
+      }
+      
+      // Wait for a short time before retrying
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    
-    return {
-      name: randomTrack.name,
-      artist: randomTrack.artists[0].name,
-      albumArt: randomTrack.album.images[0].url,
-      spotifyUrl: randomTrack.external_urls.spotify,
-      playlistUrl
-    };
-  } catch (error) {
-    console.error('Error fetching track:', error);
-    return getFallbackTrack();
   }
-};
 
-const getFallbackTrack = () => ({
-  name: 'Times Like These',
-  artist: 'Foo Fighters',
-  albumArt: 'https://i.scdn.co/image/ab67616d0000b273e0f81a716c2ce7fbf0cd3c85',
-  spotifyUrl: 'https://open.spotify.com/track/1KxwZYyzWNyZSRyErj2ojT',
-  playlistUrl: 'https://open.spotify.com/playlist/2dvgRSyecZ2qTSnUzVpSjR?si=93208cab553a405a'
-}); 
+  // This should never be reached due to the return in the catch block
+  return {
+    name: 'Unable to load track',
+    artist: 'Please try again',
+    image: 'https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e',
+    url: 'https://open.spotify.com'
+  };
+}; 

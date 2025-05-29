@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Paper, TextField, Button, Typography, IconButton, Collapse, Fade, Chip, Tooltip } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import CloseIcon from '@mui/icons-material/Close';
@@ -10,20 +9,26 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import TrafficIcon from '@mui/icons-material/Traffic';
 import SpeedIcon from '@mui/icons-material/Speed';
 import InfoIcon from '@mui/icons-material/Info';
-import WbSunnyIcon from '@mui/icons-material/WbSunny';
-import WbCloudyIcon from '@mui/icons-material/WbCloudy';
 import { keyframes } from '@mui/material/styles';
-import RainIcon from '@mui/icons-material/Grain';
-import ThunderstormIcon from '@mui/icons-material/Thunderstorm';
-import FogIcon from '@mui/icons-material/Cloud';
-import SnowIcon from '@mui/icons-material/AcUnit';
 import BreathingWidget from '../components/BreathingWidget';
 import DrivingSimulator from '../components/DrivingSimulator';
 import NavigationButton from '../components/NavigationButton';
 import RouteSummary from '../components/RouteSummary';
 import ElectricStationsToggle from '../components/ElectricStationsToggle';
+import breathingFullscrMp4 from '../../public/breathing-fullscr.mp4';
+import { BreathingControls } from '../components/BreathingWidget';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiamhhYWEiLCJhIjoiY205bWw1dTN2MGV5ZDJscjd6M2w2ZWplcCJ9.iPq01-kBwTudMOv3IV9h9g';
+// Use environment variable for Mapbox token
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiamhhYWEiLCJhIjoiY205bWw1dTN2MGV5ZDJscjd6M2w2ZWplcCJ9.iPq01-kBwTudMOv3IV9h9g';
+
+// Initialize Mapbox with error handling
+try {
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+} catch (error) {
+  console.error('Failed to initialize Mapbox:', error);
+}
+
 const BRUSSELS_COORDS: [number, number] = [4.3517, 50.8503];
 const THOMAS_MORE_COORDS: [number, number] = [4.4697, 51.0285];
 const GROTE_MARKT_COORDS: [number, number] = [4.4778, 51.0283];
@@ -35,11 +40,29 @@ const pulseKeyframes = keyframes`
   100% { transform: scale(1); opacity: 0.8; }
 `;
 
-const floatKeyframes = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-  100% { transform: translateY(0px); }
+// Add breathing blob animation keyframes
+const breatheBlob = keyframes`
+  0% { transform: scale(1); opacity: 0.55; }
+  40% { transform: scale(1.18); opacity: 0.75; }
+  60% { transform: scale(1.22); opacity: 0.82; }
+  100% { transform: scale(1); opacity: 0.55; }
 `;
+
+// Add at the top, after imports
+const speakBreathingPhase = (phase: string) => {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new window.SpeechSynthesisUtterance(phase);
+  utter.rate = 0.7;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+  utter.lang = 'en-US';
+  // Try to pick a calm, natural voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('natural'));
+  if (preferred) utter.voice = preferred;
+  window.speechSynthesis.speak(utter);
+};
 
 // Styled components for better organization
 const LocationInput = ({ 
@@ -204,59 +227,13 @@ interface ChargingStation {
   address: string;
 }
 
-const mockStations: ChargingStation[] = [
-  {
-    id: '1',
-    name: 'Mechelen Central Station',
-    coordinates: [4.4777, 51.0283],
-    availableSpots: 4,
-    totalSpots: 6,
-    power: '50 kW',
-    distance: '0.5 km',
-    estimatedTime: '2 min',
-    address: 'Stationsplein 1, 2800 Mechelen'
-  },
-  {
-    id: '2',
-    name: 'Mechelen Shopping Center',
-    coordinates: [4.4812, 51.0256],
-    availableSpots: 2,
-    totalSpots: 4,
-    power: '22 kW',
-    distance: '0.8 km',
-    estimatedTime: '3 min',
-    address: 'Bruul 50, 2800 Mechelen'
-  },
-  {
-    id: '3',
-    name: 'Mechelen City Hall',
-    coordinates: [4.4797, 51.0292],
-    availableSpots: 3,
-    totalSpots: 5,
-    power: '50 kW',
-    distance: '0.3 km',
-    estimatedTime: '1 min',
-    address: 'Grote Markt 21, 2800 Mechelen'
-  },
-  {
-    id: '4',
-    name: 'Mechelen Library',
-    coordinates: [4.4789, 51.0278],
-    availableSpots: 1,
-    totalSpots: 2,
-    power: '22 kW',
-    distance: '0.4 km',
-    estimatedTime: '2 min',
-    address: 'Moensstraat 19, 2800 Mechelen'
-  }
-];
-
 export const MapContent = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [showRouteSummary, setShowRouteSummary] = useState(false);
   const [isRouteVisible, setIsRouteVisible] = useState(false);
+  const [showBreathingPrompt, setShowBreathingPrompt] = useState(false);
   const [showBreathingWidget, setShowBreathingWidget] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [from, setFrom] = useState('Thomas More De Ham, Mechelen');
@@ -267,28 +244,26 @@ export const MapContent = () => {
     description: string;
     bestRoute: string;
   } | null>(null);
-  const [weatherInfo, setWeatherInfo] = useState<{ condition: string; temp: number } | null>(null);
-  const [weatherDetails, setWeatherDetails] = useState<{
-    feels_like: number;
-    humidity: number;
-    wind_speed: number;
-    description: string;
-  } | null>(null);
-  const [airQuality, setAirQuality] = useState<number | null>(null);
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
   const [currentRouteCoords, setCurrentRouteCoords] = useState<number[][]>([]);
   const [trafficStartIndex, setTrafficStartIndex] = useState<number>(0);
   const navigationMarker = useRef<mapboxgl.Marker | null>(null);
-  const navigationGlowLayer = useRef<string | null>(null);
   const [simSpeed, setSimSpeed] = useState(15);
   const [carIndex, setCarIndex] = useState<number | null>(null);
   const carAnimationRef = useRef<NodeJS.Timeout | null>(null);
   const [hasTriggeredBreathing, setHasTriggeredBreathing] = useState(false);
   const carShouldMove = useRef(true);
   const [showElectricStations, setShowElectricStations] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<ChargingStation | null>(null);
-  const [chargingStations, setChargingStations] = useState<ChargingStation[]>([]);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const [isBreathingFullscreen, setIsBreathingFullscreen] = useState(false);
+  const [fsPaused, setFsPaused] = useState(false);
+  const [fsMuted, setFsMuted] = useState(false);
+  const [fsVolume, setFsVolume] = useState(0.5);
+  const [fsSessionTime, setFsSessionTime] = useState(0);
+  const fsTimerRef = useRef<NodeJS.Timeout>();
+  const fsVideoRef = useRef<HTMLVideoElement>(null);
+  const [fsPhase, setFsPhase] = useState<'inhale' | 'hold' | 'exhale' | 'rest'>('inhale');
+  const waterAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -399,16 +374,6 @@ export const MapContent = () => {
           }
         } as mapboxgl.LineLayerSpecification);
 
-        // Add a marker for Grote Markt
-        const marker = new mapboxgl.Marker({
-          color: '#ff3b30',
-          scale: 0.8
-        })
-          .setLngLat(GROTE_MARKT_COORDS)
-          .setPopup(new mapboxgl.Popup({ offset: 25 })
-            .setHTML('<h3>Grote Markt</h3><p>Mechelen</p>'))
-          .addTo(map.current);
-        
         // Add weather and air quality data
         fetchWeatherData();
         fetchAirQualityData();
@@ -529,8 +494,6 @@ export const MapContent = () => {
       const station = feature.properties as ChargingStation;
 
       if (!station) return;
-
-      setSelectedStation(station);
 
       // Create popup container with pointer-events enabled
       const popupNode = document.createElement('div');
@@ -706,41 +669,6 @@ export const MapContent = () => {
       console.error('Error fetching directions:', error);
       return null;
     }
-  };
-
-  const debugRouteLayers = () => {
-    if (!map.current) return;
-    
-    console.log('Debugging route layers:');
-    
-    // Check if layers exist and their visibility
-    ['route-start', 'route-traffic', 'route-end'].forEach(layerId => {
-      const layerExists = map.current?.getLayer(layerId) !== undefined;
-      const glowLayerExists = map.current?.getLayer(`${layerId}-glow`) !== undefined;
-      
-      console.log(`${layerId}: ${layerExists ? 'exists' : 'missing'}`);
-      console.log(`${layerId}-glow: ${glowLayerExists ? 'exists' : 'missing'}`);
-      
-      if (layerExists) {
-        const visibility = map.current?.getLayoutProperty(layerId, 'visibility');
-        console.log(`${layerId} visibility: ${visibility}`);
-      }
-      
-      if (glowLayerExists) {
-        const visibility = map.current?.getLayoutProperty(`${layerId}-glow`, 'visibility');
-        console.log(`${layerId}-glow visibility: ${visibility}`);
-      }
-    });
-    
-    // Force all layers to be visible
-    ['route-start', 'route-traffic', 'route-end'].forEach(layerId => {
-      if (map.current?.getLayer(layerId)) {
-        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
-      }
-      if (map.current?.getLayer(`${layerId}-glow`)) {
-        map.current.setLayoutProperty(`${layerId}-glow`, 'visibility', 'visible');
-      }
-    });
   };
 
   const handleCheckTraffic = async () => {
@@ -969,9 +897,9 @@ export const MapContent = () => {
         duration: 1200,
         essential: true
       });
-      // Show breathing prompt if not already shown
-      if (!hasTriggeredBreathing) {
-        setShowBreathingWidget(true);
+      // Show breathing prompt if not already shown and both criteria are met
+      if (!hasTriggeredBreathing && simSpeed <= 10 && trafficInfo?.level === 'high') {
+        setShowBreathingPrompt(true);
         setHasTriggeredBreathing(true);
       }
       return;
@@ -1018,8 +946,8 @@ export const MapContent = () => {
       navigationMarker.current.remove();
     }
     const navElement = document.createElement('div');
-    navElement.style.width = '40px';
-    navElement.style.height = '40px';
+    navElement.style.width = '24px';
+    navElement.style.height = '24px';
     navElement.style.display = 'flex';
     navElement.style.alignItems = 'center';
     navElement.style.justifyContent = 'center';
@@ -1030,16 +958,40 @@ export const MapContent = () => {
     navElement.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
     navElement.style.animation = `${pulseKeyframes} 2s ease-in-out infinite`;
     navElement.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" fill="white"/>
-      </svg>
+      <style>
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(1); opacity: 0.8; }
+        }
+        .pulse-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background: rgba(0, 122, 255, 0.3);
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      </style>
+      <div class="pulse-ring"></div>
     `;
     navigationMarker.current = new mapboxgl.Marker({
       element: navElement,
-      anchor: 'center'
+      anchor: 'center',
+      rotationAlignment: 'map',
+      pitchAlignment: 'map'
     })
       .setLngLat(currentRouteCoords[0] as [number, number])
       .addTo(map.current);
+
+    // Ensure the marker stays on the route
+    map.current.on('move', () => {
+      if (navigationMarker.current && carIndex !== null) {
+        const currentPoint = currentRouteCoords[carIndex] as [number, number];
+        navigationMarker.current.setLngLat(currentPoint);
+      }
+    });
+
     ensureRouteLayersVisible();
     map.current.flyTo({
       center: currentRouteCoords[0] as [number, number],
@@ -1077,18 +1029,9 @@ export const MapContent = () => {
         `https://api.openweathermap.org/data/2.5/weather?lat=${THOMAS_MORE_COORDS[1]}&lon=${THOMAS_MORE_COORDS[0]}&appid=0f5c13cbb8dacd08f0cd71bc89836fb5&units=metric`
       );
       const data = await response.json();
-      
       if (data && data.main && data.weather && data.weather[0]) {
-        setWeatherInfo({
-          temp: Math.round(data.main.temp),
-          condition: data.weather[0].main.toLowerCase()
-        });
-        setWeatherDetails({
-          feels_like: Math.round(data.main.feels_like),
-          humidity: data.main.humidity,
-          wind_speed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
-          description: data.weather[0].description
-        });
+        // Data fetched, but not setting state
+        console.log('Weather data:', data);
       }
     } catch (error) {
       console.error('Error fetching weather data:', error);
@@ -1103,101 +1046,88 @@ export const MapContent = () => {
         `https://api.openweathermap.org/data/2.5/air_pollution?lat=${THOMAS_MORE_COORDS[1]}&lon=${THOMAS_MORE_COORDS[0]}&appid=0f5c13cbb8dacd08f0cd71bc89836fb5`
       );
       const data = await response.json();
-      
       if (data && data.list && data.list[0] && data.list[0].main) {
-        // OpenWeather AQI is 1-5, convert to 0-100 scale
-        const aqiMap: { [key: number]: number } = {
-          1: 25,  // Good
-          2: 50,  // Fair
-          3: 75,  // Moderate
-          4: 90,  // Poor
-          5: 100  // Very Poor
-        };
-        const aqi = data.list[0].main.aqi as number;
-        setAirQuality(aqiMap[aqi] || 50);
+        // Data fetched, but not setting state
+        console.log('Air quality data:', data);
       }
     } catch (error) {
       console.error('Error fetching air quality data:', error);
     }
   };
 
-  // Helper function to get weather icon
-  const getWeatherIcon = (condition: string) => {
-    switch (condition) {
-      case 'clear':
-        return <WbSunnyIcon sx={{ 
-          color: '#ff9800', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(255, 152, 0, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      case 'clouds':
-        return <WbCloudyIcon sx={{ 
-          color: '#90caf9', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(144, 202, 249, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      case 'rain':
-        return <RainIcon sx={{ 
-          color: '#64b5f6', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(100, 181, 246, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      case 'thunderstorm':
-        return <ThunderstormIcon sx={{ 
-          color: '#ffd740', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(255, 215, 64, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      case 'snow':
-        return <SnowIcon sx={{ 
-          color: '#e1f5fe', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(225, 245, 254, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      case 'mist':
-      case 'fog':
-        return <FogIcon sx={{ 
-          color: '#b0bec5', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(176, 190, 197, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-      default:
-        return <WbSunnyIcon sx={{ 
-          color: '#ff9800', 
-          fontSize: '1.1rem',
-          filter: 'drop-shadow(0 2px 4px rgba(255, 152, 0, 0.3))',
-          animation: `${floatKeyframes} 3s ease-in-out infinite`
-        }} />;
-    }
-  };
-
-  // Get AQI description and color
-  const getAQIInfo = (aqi: number) => {
-    if (aqi <= 25) return { text: 'Excellent', color: '#4caf50' };
-    if (aqi <= 50) return { text: 'Good', color: '#8bc34a' };
-    if (aqi <= 75) return { text: 'Moderate', color: '#ff9800' };
-    if (aqi <= 90) return { text: 'Poor', color: '#f44336' };
-    return { text: 'Very Poor', color: '#d32f2f' };
-  };
-
   const handleBreathingTrigger = () => {
     setShowBreathingWidget(true);
   };
 
+  useEffect(() => {
+    if (showBreathingWidget && isBreathingFullscreen && !fsPaused) {
+      fsTimerRef.current = setInterval(() => {
+        setFsSessionTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(fsTimerRef.current);
+    }
+    return () => clearInterval(fsTimerRef.current);
+  }, [showBreathingWidget, isBreathingFullscreen, fsPaused]);
+
+  useEffect(() => {
+    if (fsVideoRef.current) {
+      fsVideoRef.current.volume = fsVolume;
+    }
+  }, [fsVolume]);
+
+  useEffect(() => {
+    if (!(showBreathingWidget && isBreathingFullscreen)) return;
+    let phaseTimeout: NodeJS.Timeout;
+    const phaseDurations = { inhale: 4000, hold: 4000, exhale: 4000, rest: 2000 };
+    function nextPhase(phase: typeof fsPhase) {
+      let next: typeof fsPhase;
+      if (phase === 'inhale') next = 'hold';
+      else if (phase === 'hold') next = 'exhale';
+      else if (phase === 'exhale') next = 'rest';
+      else next = 'inhale';
+      setFsPhase(next);
+      speakBreathingPhase(
+        next === 'inhale' ? 'Inhale' :
+        next === 'hold' ? 'Hold' :
+        next === 'exhale' ? 'Exhale' : 'Rest'
+      );
+      phaseTimeout = setTimeout(() => nextPhase(next), phaseDurations[next]);
+    }
+    setFsPhase('inhale');
+    speakBreathingPhase('Inhale');
+    phaseTimeout = setTimeout(() => nextPhase('inhale'), phaseDurations['inhale']);
+    return () => {
+      clearTimeout(phaseTimeout);
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    };
+  }, [showBreathingWidget, isBreathingFullscreen]);
+
+  useEffect(() => {
+    if (showBreathingWidget && isBreathingFullscreen) {
+      if (waterAudioRef.current) {
+        waterAudioRef.current.currentTime = 0;
+        waterAudioRef.current.volume = 0.18;
+        waterAudioRef.current.loop = true;
+        waterAudioRef.current.play().catch(() => {});
+      }
+    } else {
+      if (waterAudioRef.current) {
+        waterAudioRef.current.pause();
+        waterAudioRef.current.currentTime = 0;
+      }
+    }
+  }, [showBreathingWidget, isBreathingFullscreen]);
+
+  const handleGoFullscreen = () => {
+    setIsBreathingFullscreen(true);
+    setTimeout(() => {
+      waterAudioRef.current?.play().catch(() => {});
+    }, 0);
+  };
+
   return (
-    <Box sx={{ 
-      display: 'flex',
-      height: '100%',
-      width: '100%',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
       <Box
         ref={mapContainer}
         sx={{
@@ -1367,12 +1297,88 @@ export const MapContent = () => {
         </Box>
       </Collapse>
 
+      {/* Take a breath button */}
+      {showBreathingPrompt && !showBreathingWidget && (
+        <Box sx={{
+          position: 'absolute',
+          bottom: 24,
+          left: 24,
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
+          borderRadius: '24px',
+          boxShadow: '0 4px 24px 0 rgba(255, 183, 197, 0.18)',
+          px: 4,
+          py: 3,
+          minWidth: 300,
+          minHeight: 220,
+        }}>
+          {/* Icon in square container */}
+          <Box sx={{
+            width: 56,
+            height: 56,
+            background: 'linear-gradient(135deg, #e0f7fa 0%, #ffe0ec 100%)',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px 0 rgba(255, 183, 197, 0.12)',
+            mb: 2,
+          }}>
+            <span role="img" aria-label="calm" style={{ fontSize: 32 }}>🧘‍♂️</span>
+          </Box>
+          {/* Large, centered text */}
+          <Typography variant="h5" sx={{
+            color: '#7b5e6e',
+            fontWeight: 700,
+            textAlign: 'center',
+            mb: 3,
+            letterSpacing: 0.2,
+          }}>
+            Take a calming breath
+          </Typography>
+          {/* Enhanced Start Breathing button */}
+          <Button
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
+              color: '#7b5e6e',
+              borderRadius: '16px',
+              fontWeight: 700,
+              px: 4,
+              py: 1.7,
+              textTransform: 'none',
+              fontSize: '1.15rem',
+              boxShadow: '0 4px 24px 0 rgba(255, 183, 197, 0.18)',
+              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+              '&:hover': {
+                background: 'linear-gradient(120deg, #ffd0e0 0%, #d0e7ea 100%)',
+                color: '#5e3b4b',
+                transform: 'scale(1.04)',
+                boxShadow: '0 6px 32px 0 rgba(255, 183, 197, 0.22)',
+              },
+              '&:active': {
+                background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
+                color: '#7b5e6e',
+                transform: 'scale(0.98)',
+              },
+            }}
+            onClick={() => { setShowBreathingPrompt(false); setShowBreathingWidget(true); }}
+          >
+            Start breathing
+          </Button>
+        </Box>
+      )}
+
       {/* Breathing Widget */}
-      {showBreathingWidget && (
-        <BreathingWidget 
-          onClose={() => setShowBreathingWidget(false)} 
-          showSimulator={showSimulator}
+      {showBreathingWidget && !isBreathingFullscreen && (
+        <BreathingWidget
+          onClose={() => { setShowBreathingWidget(false); setShowSimulator(false); setIsBreathingFullscreen(false); }}
           setShowSimulator={setShowSimulator}
+          onRequestFullscreen={handleGoFullscreen}
+          isFullscreen={false}
         />
       )}
 
@@ -1435,6 +1441,205 @@ export const MapContent = () => {
       >
         <ElectricStationsToggle onToggle={setShowElectricStations} />
       </Box>
+
+      {/* Breathing Widget Fullscreen Overlay */}
+      {showBreathingWidget && isBreathingFullscreen && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 2000,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            p: 0,
+            m: 0,
+            borderRadius: 3,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Water sound audio */}
+          <audio ref={waterAudioRef} src="/water-calm.mp3" preload="auto" style={{ display: 'none' }} />
+          {/* Video background with error handling */}
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+            <video
+              ref={fsVideoRef}
+              src={breathingFullscrMp4}
+              autoPlay
+              loop
+              muted={fsMuted}
+              playsInline
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                background: '#222',
+                display: 'block',
+              }}
+              onError={e => {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.getElementById('breathing-fallback-bg');
+                if (fallback) fallback.style.display = 'block';
+              }}
+            />
+            <Box id="breathing-fallback-bg" sx={{ display: 'none', width: '100%', height: '100%', background: 'linear-gradient(120deg, #222 0%, #444 100%)', position: 'absolute', top: 0, left: 0, zIndex: 1 }} />
+          </Box>
+          {/* Centered breathing phase text and animated blob */}
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}>
+            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: { xs: 220, sm: 320, md: 400 }, height: { xs: 220, sm: 320, md: 400 } }}>
+              {/* Animated blob/circle, zIndex 1 */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: fsPhase === 'inhale' ? 'linear-gradient(135deg, #ffe0ec 0%, #b39ddb 100%)' :
+                              fsPhase === 'exhale' ? 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)' :
+                              'linear-gradient(135deg, #f3e5f5 0%, #b2ebf2 100%)',
+                  filter: 'blur(8px)',
+                  opacity: 0.7,
+                  animation: `${breatheBlob} ${fsPhase === 'inhale' ? '4s' : fsPhase === 'hold' ? '4s' : fsPhase === 'exhale' ? '4s' : '2s'} cubic-bezier(0.4,0,0.2,1) infinite`,
+                  boxShadow: '0 0 64px 0 #b39ddb44',
+                  transition: 'background 0.5s',
+                  zIndex: 1,
+                }}
+              />
+              {/* Animated phase text, zIndex 2 */}
+              <Typography
+                key={fsPhase}
+                variant="h2"
+                sx={{
+                  color: '#fff',
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  textShadow: '0 4px 32px rgba(0,0,0,0.25)',
+                  opacity: 0.92,
+                  fontSize: { xs: '2.2rem', sm: '3.2rem', md: '4.2rem' },
+                  textAlign: 'center',
+                  userSelect: 'none',
+                  transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)',
+                  animation: `${keyframes`
+                    0% { opacity: 0; transform: scale(0.92); }
+                    20% { opacity: 1; transform: scale(1.04); }
+                    80% { opacity: 1; transform: scale(1.04); }
+                    100% { opacity: 0; transform: scale(0.92); }
+                  `} ${fsPhase === 'inhale' ? '4s' : fsPhase === 'hold' ? '4s' : fsPhase === 'exhale' ? '4s' : '2s'} cubic-bezier(0.4,0,0.2,1) infinite`,
+                  zIndex: 2,
+                }}
+              >
+                {fsPhase === 'inhale' && 'Inhale'}
+                {fsPhase === 'hold' && 'Hold'}
+                {fsPhase === 'exhale' && 'Exhale'}
+                {fsPhase === 'rest' && 'Rest'}
+              </Typography>
+            </Box>
+          </Box>
+          {/* Top right close session */}
+          <IconButton
+            onClick={() => {
+              setShowBreathingWidget(false);
+              setIsBreathingFullscreen(false);
+              setShowSimulator(false);
+            }}
+            sx={{
+              position: 'absolute',
+              top: 24,
+              right: 24,
+              zIndex: 10,
+              color: '#fff',
+              background: 'rgba(38,20,23,0.85)',
+              '&:hover': { background: 'rgba(38,20,23,1)' },
+              width: 40,
+              height: 40,
+            }}
+          >
+            <CloseIcon fontSize="medium" />
+          </IconButton>
+          {/* Controls row with exit fullscreen button to the right */}
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 5 }}>
+            <Box
+              sx={{
+                width: { xs: '96%', sm: 420 },
+                borderRadius: 3,
+                background: 'rgba(30, 30, 40, 0.55)',
+                boxShadow: '0 8px 32px 0 rgba(24,29,47,0.18)',
+                backdropFilter: 'blur(18px)',
+                WebkitBackdropFilter: 'blur(18px)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: 0,
+                zIndex: 3,
+                border: '1.5px solid rgba(255,255,255,0.10)',
+                minHeight: 64,
+                height: 64,
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ flex: 1, px: 3, display: 'flex', alignItems: 'center', height: '100%' }}>
+                <BreathingControls
+                  sessionTime={fsSessionTime}
+                  isPaused={fsPaused}
+                  isMuted={fsMuted}
+                  volume={fsVolume}
+                  onPauseToggle={() => setFsPaused(p => !p)}
+                  onMuteToggle={() => setFsMuted(m => !m)}
+                  onVolumeChange={setFsVolume}
+                  variant="fullscreen"
+                />
+              </Box>
+            </Box>
+            <IconButton
+              onClick={() => setIsBreathingFullscreen(false)}
+              sx={{
+                color: '#fff',
+                background: 'rgba(38,20,23,0.65)',
+                borderRadius: 3,
+                height: 64,
+                width: 64,
+                minWidth: 64,
+                maxWidth: 64,
+                boxShadow: '0 2px 8px 0 rgba(24,29,47,0.10)',
+                border: '1.5px solid rgba(255,255,255,0.10)',
+                borderLeft: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: 0,
+                m: 0,
+                ml: 2,
+                '&:hover': {
+                  background: 'rgba(38,20,23,0.92)',
+                  color: '#ffe0ec',
+                },
+                transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+              }}
+            >
+              <FullscreenIcon sx={{ fontSize: 28 }} />
+            </IconButton>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
