@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Paper, Typography, TextField, Button, Avatar, IconButton, Fade, Grid } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Paper, Typography, TextField, Button, Avatar, IconButton, Fade, Grid, Switch } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
 import EmailIcon from '@mui/icons-material/Email';
@@ -48,10 +48,24 @@ const pulseKeyframes = keyframes`
 const ProfileContent = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [autoplayBreathing, setAutoplayBreathing] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  // Load autoplay setting from localStorage
+  useEffect(() => {
+    const savedAutoplay = localStorage.getItem('autoplayBreathing');
+    if (savedAutoplay !== null) {
+      setAutoplayBreathing(savedAutoplay === 'true');
+    }
+  }, []);
+
+  // Save autoplay setting to localStorage
+  useEffect(() => {
+    localStorage.setItem('autoplayBreathing', autoplayBreathing.toString());
+  }, [autoplayBreathing]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -397,6 +411,27 @@ const ProfileContent = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PersonIcon sx={{ color: '#ff3b30', fontSize: 20 }} />
                 <Typography sx={{ color: '#e0e0e0', fontWeight: 500 }}>Language: <b>English</b></Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span role="img" aria-label="breathing" style={{ fontSize: 20 }}>🧘‍♂️</span>
+                <Typography sx={{ color: '#e0e0e0', fontWeight: 500 }}>Autoplay Breathing: <b>{autoplayBreathing ? 'Enabled' : 'Disabled'}</b></Typography>
+                <Switch
+                  checked={autoplayBreathing}
+                  onChange={(e) => setAutoplayBreathing(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase': {
+                      '&.Mui-checked': {
+                        color: '#ff3b30',
+                        '& + .MuiSwitch-track': {
+                          backgroundColor: '#ff3b30',
+                        },
+                      },
+                    },
+                    '& .MuiSwitch-track': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                  }}
+                />
               </Box>
             </Box>
           </Paper>

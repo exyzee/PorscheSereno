@@ -13,6 +13,7 @@ interface BreathingWidgetProps {
   setShowSimulator: (show: boolean) => void;
   onRequestFullscreen?: () => void;
   isFullscreen?: boolean;
+  autoplay?: boolean;
 }
 
 // Handles the controls for the breathing session (timer, pause, mute, etc.)
@@ -111,7 +112,7 @@ export const BreathingControls: React.FC<BreathingControlsProps> = ({
 
 // This is the main breathing widget. Handles video, state, and breathing logic.
 const BreathingWidget: React.FC<BreathingWidgetProps> = (props) => {
-  const { onClose, setShowSimulator, onRequestFullscreen, isFullscreen } = props;
+  const { onClose, setShowSimulator, onRequestFullscreen, isFullscreen, autoplay = false } = props;
   const [isStarted, setIsStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -120,9 +121,11 @@ const BreathingWidget: React.FC<BreathingWidgetProps> = (props) => {
   const [videoError, setVideoError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState(0);
   const [breathingPhase, setBreathingPhase] = useState<'inhale' | 'hold' | 'exhale' | 'rest'>('inhale');
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout>();
+  const countdownRef = useRef<NodeJS.Timeout>();
 
   // Used for the animated circle in fullscreen mode
   const breatheAnimation = keyframes`
@@ -204,6 +207,39 @@ const BreathingWidget: React.FC<BreathingWidgetProps> = (props) => {
       setBreathingPhase('inhale');
     }
   }, [isStarted, isPaused]);
+
+  // Handle autoplay countdown
+  useEffect(() => {
+    if (autoplay && !isStarted && countdown === null) {
+      setCountdown(3);
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            clearInterval(interval);
+            setIsStarted(true);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      countdownRef.current = interval;
+    }
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, [autoplay, isStarted]);
+
+  // Reset countdown when autoplay changes
+  useEffect(() => {
+    if (!autoplay) {
+      setCountdown(null);
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    }
+  }, [autoplay]);
 
   const handleEndSession = () => {
     onClose();
@@ -359,40 +395,43 @@ const BreathingWidget: React.FC<BreathingWidgetProps> = (props) => {
                   mb: 2,
                   letterSpacing: 0.1,
                   textAlign: 'center',
+                  fontSize: countdown !== null ? '1.5rem' : '1.25rem',
+                  transition: 'all 0.3s ease',
                 }}
               >
-                Take a moment to breathe
+                {countdown !== null ? `Starting in ${countdown}...` : 'Take a moment to breathe'}
               </Typography>
-              {/* Start Button - Smaller and More Beautiful */}
-              <Button
-                variant="contained"
-                onClick={() => setIsStarted(true)}
-                sx={{
-                  background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
-                  color: '#7b5e6e',
-                  borderRadius: '16px',
-                  boxShadow: '0 2px 8px 0 rgba(255, 183, 197, 0.10)',
-                  fontWeight: 500,
-                  px: 2,
-                  py: 0.7,
-                  fontSize: '0.97rem',
-                  textTransform: 'none',
-                  transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
-                  '&:hover': {
-                    background: 'linear-gradient(120deg, #ffd0e0 0%, #d0e7ea 100%)',
-                    color: '#5e3b4b',
-                    transform: 'scale(1.03)',
-                    boxShadow: '0 4px 16px 0 rgba(255, 183, 197, 0.16)',
-                  },
-                  '&:active': {
+              {!autoplay && !isStarted && countdown === null && (
+                <Button
+                  variant="contained"
+                  onClick={() => setIsStarted(true)}
+                  sx={{
                     background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
                     color: '#7b5e6e',
-                    transform: 'scale(0.98)',
-                  },
-                }}
-              >
-                Start breathing
-              </Button>
+                    borderRadius: '16px',
+                    boxShadow: '0 2px 8px 0 rgba(255, 183, 197, 0.10)',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 0.7,
+                    fontSize: '0.97rem',
+                    textTransform: 'none',
+                    transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+                    '&:hover': {
+                      background: 'linear-gradient(120deg, #ffd0e0 0%, #d0e7ea 100%)',
+                      color: '#5e3b4b',
+                      transform: 'scale(1.03)',
+                      boxShadow: '0 4px 16px 0 rgba(255, 183, 197, 0.16)',
+                    },
+                    '&:active': {
+                      background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
+                      color: '#7b5e6e',
+                      transform: 'scale(0.98)',
+                    },
+                  }}
+                >
+                  Start breathing
+                </Button>
+              )}
             </Box>
           ) : (
             // Active Breathing View - Adjusting layout

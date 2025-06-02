@@ -14,11 +14,11 @@ file_put_contents('breathing_log.txt', $logMessage, FILE_APPEND);
 
 // Check if this is a video request
 if (isset($_GET['video'])) {
-    $videoPath = '../src/assets/breathing.mov';
+    $videoPath = '../public/breathing.mp4';
     
     if (file_exists($videoPath)) {
         // Set proper headers for video streaming
-        header('Content-Type: video/quicktime');
+        header('Content-Type: video/mp4');
         header('Content-Length: ' . filesize($videoPath));
         header('Accept-Ranges: bytes');
         header('Cache-Control: no-cache');
@@ -41,7 +41,7 @@ if (isset($_GET['video'])) {
 }
 
 // Regular JSON response
-$videoPath = '../src/assets/breathing.mov';
+$videoPath = '../public/breathing.mp4';
 
 if (file_exists($videoPath)) {
     echo json_encode([
@@ -53,7 +53,7 @@ if (file_exists($videoPath)) {
             'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
         ],
         'debug' => [
-            'requested_video' => 'breathing.mov',
+            'requested_video' => 'breathing.mp4',
             'file_exists' => true,
             'file_size' => filesize($videoPath)
         ]
@@ -68,7 +68,7 @@ if (file_exists($videoPath)) {
             'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
         ],
         'debug' => [
-            'requested_video' => 'breathing.mov',
+            'requested_video' => 'breathing.mp4',
             'file_exists' => false,
             'file_path' => $videoPath
         ]

@@ -264,6 +264,7 @@ export const MapContent = () => {
   const fsVideoRef = useRef<HTMLVideoElement>(null);
   const [fsPhase, setFsPhase] = useState<'inhale' | 'hold' | 'exhale' | 'rest'>('inhale');
   const waterAudioRef = useRef<HTMLAudioElement>(null);
+  const [autoplayBreathing, setAutoplayBreathing] = useState(false);
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -1056,6 +1057,7 @@ export const MapContent = () => {
   };
 
   const handleBreathingTrigger = () => {
+    setShowBreathingPrompt(false);
     setShowBreathingWidget(true);
   };
 
@@ -1125,6 +1127,19 @@ export const MapContent = () => {
       waterAudioRef.current?.play().catch(() => {});
     }, 0);
   };
+
+  // Add effect to load autoplay setting from localStorage
+  useEffect(() => {
+    const savedAutoplay = localStorage.getItem('autoplayBreathing');
+    if (savedAutoplay !== null) {
+      setAutoplayBreathing(savedAutoplay === 'true');
+    }
+  }, []);
+
+  // Add effect to save autoplay setting to localStorage
+  useEffect(() => {
+    localStorage.setItem('autoplayBreathing', autoplayBreathing.toString());
+  }, [autoplayBreathing]);
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -1297,81 +1312,6 @@ export const MapContent = () => {
         </Box>
       </Collapse>
 
-      {/* Take a breath button */}
-      {showBreathingPrompt && !showBreathingWidget && (
-        <Box sx={{
-          position: 'absolute',
-          bottom: 24,
-          left: 24,
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
-          borderRadius: '24px',
-          boxShadow: '0 4px 24px 0 rgba(255, 183, 197, 0.18)',
-          px: 4,
-          py: 3,
-          minWidth: 300,
-          minHeight: 220,
-        }}>
-          {/* Icon in square container */}
-          <Box sx={{
-            width: 56,
-            height: 56,
-            background: 'linear-gradient(135deg, #e0f7fa 0%, #ffe0ec 100%)',
-            borderRadius: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px 0 rgba(255, 183, 197, 0.12)',
-            mb: 2,
-          }}>
-            <span role="img" aria-label="calm" style={{ fontSize: 32 }}>🧘‍♂️</span>
-          </Box>
-          {/* Large, centered text */}
-          <Typography variant="h5" sx={{
-            color: '#7b5e6e',
-            fontWeight: 700,
-            textAlign: 'center',
-            mb: 3,
-            letterSpacing: 0.2,
-          }}>
-            Take a calming breath
-          </Typography>
-          {/* Enhanced Start Breathing button */}
-          <Button
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
-              color: '#7b5e6e',
-              borderRadius: '16px',
-              fontWeight: 700,
-              px: 4,
-              py: 1.7,
-              textTransform: 'none',
-              fontSize: '1.15rem',
-              boxShadow: '0 4px 24px 0 rgba(255, 183, 197, 0.18)',
-              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-              '&:hover': {
-                background: 'linear-gradient(120deg, #ffd0e0 0%, #d0e7ea 100%)',
-                color: '#5e3b4b',
-                transform: 'scale(1.04)',
-                boxShadow: '0 6px 32px 0 rgba(255, 183, 197, 0.22)',
-              },
-              '&:active': {
-                background: 'linear-gradient(120deg, #ffe0ec 0%, #e0f7fa 100%)',
-                color: '#7b5e6e',
-                transform: 'scale(0.98)',
-              },
-            }}
-            onClick={() => { setShowBreathingPrompt(false); setShowBreathingWidget(true); }}
-          >
-            Start breathing
-          </Button>
-        </Box>
-      )}
-
       {/* Breathing Widget */}
       {showBreathingWidget && !isBreathingFullscreen && (
         <BreathingWidget
@@ -1379,6 +1319,7 @@ export const MapContent = () => {
           setShowSimulator={setShowSimulator}
           onRequestFullscreen={handleGoFullscreen}
           isFullscreen={false}
+          autoplay={autoplayBreathing}
         />
       )}
 
